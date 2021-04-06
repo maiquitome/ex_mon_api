@@ -14,7 +14,10 @@ To start your Phoenix server:
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
 Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
-# Creating the project from scratch
+
+<div align="center">
+  <h1> Creating the project from scratch </h1>
+</div>
 
 ### Generating the project
 ```bash
@@ -77,11 +80,13 @@ defmodule ExMon.Trainer do
   end
 end
 ```
-All fields filled in (OK)
+✔️ All fields filled in (OK)
 ```bash
-iex(1)> params = %{name: "Maiqui", password_hash: "123456senha"}
+iex> params = %{name: "Maiqui", password_hash: "123456senha"}
 %{name: "Maiqui", password_hash: "123456senha"}
-iex(2)> ExMon.Trainer.changeset(params)
+```
+```bash
+iex> ExMon.Trainer.changeset(params)
 #Ecto.Changeset<
   action: nil,
   changes: %{name: "Maiqui", password_hash: "123456senha"},
@@ -90,15 +95,54 @@ iex(2)> ExMon.Trainer.changeset(params)
   valid?: true
 >
 ```
-Empty password field (ERROR)
+❌ Empty password field (ERROR)
 ```bash
-iex(3)> params = %{name: "Maiqui"}
+iex> params = %{name: "Maiqui"}
 %{name: "Maiqui"}
-iex(4)> ExMon.Trainer.changeset(params)
+```
+```bash
+iex> ExMon.Trainer.changeset(params)
 #Ecto.Changeset<
   action: nil,
   changes: %{name: "Maiqui"},
   errors: [password_hash: {"can't be blank", [validation: :required]}],
+  data: #ExMon.Trainer<>,
+  valid?: false
+>
+```
+### Understanding what changesets are
+* Changesets allow filtering, casting, validation and definition of constraints when manipulating structs.
+  - https://hexdocs.pm/ecto/Ecto.Changeset.html
+* In the __lib/ex_mon/trainer.ex__
+  - In the code below:
+    ```elixir
+    def changeset(params) do
+      %__MODULE__{}
+      |> cast(params, @required_params)
+      |> validate_required(@required_params)
+    end
+    ```
+  - add this code:
+    ```elixir
+    |> validate_length(:password_hash, min: 6)
+    ```
+❌ Now if we try to use a password shorter than 6 characters it will result in an error
+```bash
+iex> recompile
+Compiling 1 file (.ex)
+:ok
+```
+```bash
+iex> params = %{name: "Maiqui", password_hash: "12345"}
+%{name: "Maiqui", password_hash: "12345"}
+iex> ExMon.Trainer.changeset(params)
+#Ecto.Changeset<
+  action: nil,
+  changes: %{name: "Maiqui", password_hash: "12345"},
+  errors: [
+    password_hash: {"should be at least %{count} character(s)",
+     [count: 6, validation: :length, kind: :min, type: :string]}
+  ],
   data: #ExMon.Trainer<>,
   valid?: false
 >
