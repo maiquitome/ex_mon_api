@@ -110,3 +110,40 @@ iex> ExMon.Trainer.changeset(params)
   valid?: false
 >
 ```
+### Understanding what changesets are
+* Changesets allow filtering, casting, validation and definition of constraints when manipulating structs.
+  - https://hexdocs.pm/ecto/Ecto.Changeset.html
+* In the __lib/ex_mon/trainer.ex__
+  - In the code below:
+    ```elixir
+    def changeset(params) do
+      %__MODULE__{}
+      |> cast(params, @required_params)
+      |> validate_required(@required_params)
+    end
+    ```
+  - add this code:
+    ```elixir
+    |> validate_length(:password_hash, min: 6)
+    ```
+❌ Now if we try to use a password shorter than 6 characters it will result in an error
+```bash
+iex> recompile
+Compiling 1 file (.ex)
+:ok
+```
+```bash
+iex> params = %{name: "Maiqui", password_hash: "12345"}
+%{name: "Maiqui", password_hash: "12345"}
+iex> ExMon.Trainer.changeset(params)
+#Ecto.Changeset<
+  action: nil,
+  changes: %{name: "Maiqui", password_hash: "12345"},
+  errors: [
+    password_hash: {"should be at least %{count} character(s)",
+     [count: 6, validation: :length, kind: :min, type: :string]}
+  ],
+  data: #ExMon.Trainer<>,
+  valid?: false
+>
+```
