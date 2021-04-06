@@ -120,6 +120,7 @@ iex> ExMon.Trainer.changeset(params)
       %__MODULE__{}
       |> cast(params, @required_params)
       |> validate_required(@required_params)
+      # here
     end
     ```
   - add this code:
@@ -135,6 +136,8 @@ Compiling 1 file (.ex)
 ```bash
 iex> params = %{name: "Maiqui", password_hash: "12345"}
 %{name: "Maiqui", password_hash: "12345"}
+```
+```bash
 iex> ExMon.Trainer.changeset(params)
 #Ecto.Changeset<
   action: nil,
