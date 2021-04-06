@@ -14,7 +14,10 @@ To start your Phoenix server:
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
 Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
-# Creating the project from scratch
+
+<div align="center">
+  <h1> Creating the project from scratch </h1>
+</div>
 
 ### Generating the project
 ```bash
@@ -77,11 +80,13 @@ defmodule ExMon.Trainer do
   end
 end
 ```
-All fields filled in (OK)
+✔️ All fields filled in (OK)
 ```bash
-iex(1)> params = %{name: "Maiqui", password_hash: "123456senha"}
+iex> params = %{name: "Maiqui", password_hash: "123456senha"}
 %{name: "Maiqui", password_hash: "123456senha"}
-iex(2)> ExMon.Trainer.changeset(params)
+```
+```bash
+iex> ExMon.Trainer.changeset(params)
 #Ecto.Changeset<
   action: nil,
   changes: %{name: "Maiqui", password_hash: "123456senha"},
@@ -90,11 +95,13 @@ iex(2)> ExMon.Trainer.changeset(params)
   valid?: true
 >
 ```
-Empty password field (ERROR)
+❌ Empty password field (ERROR)
 ```bash
-iex(3)> params = %{name: "Maiqui"}
+iex> params = %{name: "Maiqui"}
 %{name: "Maiqui"}
-iex(4)> ExMon.Trainer.changeset(params)
+```
+```bash
+iex> ExMon.Trainer.changeset(params)
 #Ecto.Changeset<
   action: nil,
   changes: %{name: "Maiqui"},
