@@ -5,7 +5,19 @@
   </h2>
 </div>
 
-To start your Phoenix server:
+### What have we learned?
+  * Creating a REST JSON API
+  * Interacting with the database using Ecto
+  * Good practices in code separation by context
+  * Interaction with external APIs via HTTP protocol
+
+  * Trainer
+    - Create, delete, update, read trainer
+  * Pokemon Team
+    - Create team, delete team, update team
+  * Read Pokemon information
+
+### To start your Phoenix server:
 
   * Install dependencies with `mix deps.get`
   * Create and migrate your database with `mix ecto.setup`
