@@ -40,33 +40,38 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
   $ mix ecto.create
 ```
 ### Creating the trainer migration
-```bash
-  $ mix ecto.gen.migration create_trainer_table
-```
-```elixir
-# priv/repo/migrations/20210406091522_create_trainer_table.exs
-defmodule ExMon.Repo.Migrations.CreateTrainerTable do
-  use Ecto.Migration
+* migrations are files that define how our database is configured and create the tables
+  - https://hexdocs.pm/ecto_sql/Ecto.Migration.html
+  ```bash
+    $ mix ecto.gen.migration create_trainer_table
+  ```
+* in the file created: __priv/repo/migrations/20210406091522_create_trainer_table.exs__
+  ```elixir
+  defmodule ExMon.Repo.Migrations.CreateTrainerTable do
+    use Ecto.Migration
 
-  # Within this def change
-    # The ecto will be responsible for the creation or downgrading, if necessary
-  def change do
-    # Primary key: false
-      # Do not generate the primary key itself as integer,
-      # we will create the format of the primary key ourselves
-    create table(:trainers, primary_key: false) do
-      add :id, :uuid, primary_key: true # Here we are creating the primary key as uuid
-      add :name, :string
-      # password_hash will be an encrypted password
-      add :password_hash, :string
-      timestamps()
+    # Within this def change
+      # The ecto will be responsible for the creation or downgrading, if necessary
+    def change do
+      # primary key: false
+        # Do not generate the primary key itself as integer,
+        # we will create the format of the primary key ourselves
+      create table(:trainers, primary_key: false) do
+        # :trainers is the table name
+        # UUID - universally unique identifier
+        add :id,            :uuid,  primary_key: true # Here we are creating the primary key as uuid
+        add :name,          :string
+        add :password_hash, :string # password_hash will be an encrypted password
+        timestamps()
+        # timestamps() is a function that automatically inserts the inserted_at and updated_at columns
+      end
     end
   end
-end
-```
-```bash
-  $ mix ecto.migrate
-```
+  ```
+* create in the database
+  ```bash
+    $ mix ecto.migrate
+  ```
 ### Creating the trainer schema
 ```elixir
 # lib/ex_mon/trainer.ex
