@@ -150,3 +150,152 @@ iex> ExMon.Trainer.changeset(params)
   valid?: false
 >
 ```
+### Encrypting the trainer password
+* in the __lib/ex_mon/trainer.ex__
+  - in the code below:
+    ```elixir
+    schema "trainers" do
+      field :name, :string
+      field :password_hash, :string
+      # here
+      timestamps()
+    end
+    ```
+  - add this code:
+    ```elixir
+    field :password, :string, virtual: true
+    ```
+    - virtual: true
+      - means that this field doesn't exist in the database, only in the schema
+* in the __mix.exs__
+  - in the code below:
+    ```elixir
+    defp deps do
+      [
+        {:phoenix, "~> 1.5.8"},
+        {:phoenix_ecto, "~> 4.1"},
+        {:ecto_sql, "~> 3.4"},
+        {:postgrex, ">= 0.0.0"},
+        {:phoenix_live_dashboard, "~> 0.4"},
+        {:telemetry_metrics, "~> 0.4"},
+        {:telemetry_poller, "~> 0.4"},
+        {:gettext, "~> 0.11"},
+        {:jason, "~> 1.0"},
+        {:plug_cowboy, "~> 2.0"},
+        # add here
+      ]
+    end
+    ```
+  - add this code:
+    ```elixir
+    {:argon2_elixir, "~> 2.0"}
+    ```
+  - and run this command to download this new dependency:
+    ```bash
+    $ mix deps.get
+    ```
+* in the __lib/ex_mon/trainer.ex__
+  - in the code below:
+    ```elixir
+    def changeset(params) do
+      %__MODULE__{}
+      |> cast(params, @required_params)
+      |> validate_required(@required_params)
+      |> validate_length(:password_hash, min: 6)
+      # add here
+    end
+    ```
+    - add this code:
+      ```elixir
+      |> put_pass_hash()
+      ```
+  - create the functions:
+    ```elixir
+    defp put_pass_hash(
+      %Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset
+    ) do
+      # change(data, changes \\ %{})
+      change(changeset, Argon2.add_hash(password))
+    end
+
+    # no match
+    defp put_pass_hash(changeset), do: changeset
+    ```
+    - https://hexdocs.pm/ecto/Ecto.Changeset.html#change/2
+* explanation:
+  - using password_hash
+    ```bash
+    iex> params = %{name: "Maiqui", password_hash: "123456"}
+    %{name: "Maiqui", password_hash: "123456"}
+    ```
+  - changeset without being encrypted
+    ```bash
+    iex> changeset = ExMon.Trainer.changeset(params)
+    #Ecto.Changeset<
+      action: nil,
+      changes: %{name: "Maiqui", password_hash: "123456"},
+      errors: [],
+      data: #ExMon.Trainer<>,
+      valid?: true
+    >
+    ```
+  - encrypting
+    ```bash
+    iex> Argon2.add_hash("123456")
+    %{
+      password_hash: "$argon2id$v=19$m=131072,t=8,p=4$uQdW8RwlZWJvwFYNE73yoA$1yNyDBlMmfTUOd9z/z2A9g1PxMtnt3zzoGThZsi3Ops"
+    }
+    ```
+* now let's use __password__ instead of __password_hash__
+  - in the code below:
+      ```elixir
+      @required_params [:name, :password_hash]
+
+      def changeset(params) do
+        %__MODULE__{}
+        |> cast(params, @required_params)
+        |> validate_required(@required_params)
+        |> validate_length(:password_hash, min: 6)
+        |> put_pass_hash()
+      end
+      ```
+    - change __password_hash__ to __password__:
+      ```elixir
+      @required_params [:name, :password]
+
+      def changeset(params) do
+        %__MODULE__{}
+        |> cast(params, @required_params)
+        |> validate_required(@required_params)
+        |> validate_length(:password, min: 6)
+        |> put_pass_hash()
+      end
+      ```
+    - recompile
+      ```bash
+      iex> recompile
+      Compiling 1 file (.ex)
+      :ok
+      ```
+  - using __password__
+    ```bash
+    iex> params = %{name: "Maiqui", password: "123456"}
+    %{name: "Maiqui", password: "123456"}
+    ```
+  - changeset encrypted
+    ```bash
+    iex> changeset = ExMon.Trainer.changeset(params)
+    #Ecto.Changeset<
+      action: nil,
+      changes: %{
+        name: "Maiqui",
+        password: "123456",
+        password_hash: "$argon2id$v=19$m=131072,t=8,p=4$DxQLzWqhlsAQY+hKj7WuPg$JPtnPnKmCwHseV1wA9pNGUAvjcrP+AQJNGvI9R/jYtQ"
+      },
+      errors: [],
+      data: #ExMon.Trainer<>,
+      valid?: true
+    >
+    ```
+      - the password field will not be added to the database because this field is only virtual
+      - https://hexdocs.pm/ecto/Ecto.Schema.html
