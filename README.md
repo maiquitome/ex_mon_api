@@ -83,25 +83,40 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
     $ mix ecto.migrate
   ```
 ### Creating the trainer schema
+* Now let's build the logic to insert the trainer in the database.
+  - Every time we need to do a database operation (insert, update...) we need to deal with schemas.
+  - Making an analogy, schemas are similar to models in other web frameworks.
+  - But it's not a model, because usually model has attributes and behaviours.
+  - The schema only has a representation of the data and validations of that data.
+* Create the file __lib/ex_mon/trainer.ex__
 ```elixir
-# lib/ex_mon/trainer.ex
 defmodule ExMon.Trainer do
   use Ecto.Schema
   import Ecto.Changeset
 
   # If it was an incremental integer id we wouldn't need to do that but...
   # as it is UUID we need to make it clear
+  # @primary_key - configures the schema primary key. It expects a tuple {field_name, type, options}
   @primary_key {:id, Ecto.UUID, autogenerate: true}
 
+  # mirror scheme of our migration
+  # the fields are the same as in our migration
   schema "trainers" do
-    field :name, :string
+    field :name,          :string
     field :password_hash, :string
     timestamps()
   end
 
+  # to insert anything into the database, we need to create changesets
+  # changesets are structures with powers
   @required_params [:name, :password_hash]
+  # params are the parameters that I want to create my schema
+  # for example: what is the name? what is the password?
   def changeset(params) do
     %__MODULE__{}
+    # Cast - Applies the given params as changes for the given data
+    # according to the given set of permitted keys.
+    # cast(data, params, permitted, opts \\ [])
     |> cast(params, @required_params)
     |> validate_required(@required_params)
   end
