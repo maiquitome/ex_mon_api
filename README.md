@@ -31,6 +31,13 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
   <h1> Creating the project from scratch </h1>
 </div>
 
+### 📚 Recommended study topics for this project
+* Ecto
+  1. Basics
+      - https://elixirschool.com/en/lessons/ecto/basics/
+  2. Changesets
+      - https://elixirschool.com/en/lessons/ecto/changesets/
+
 ### Generating the project
 ```bash
   $ mix phx.new ex_mon --no-webpack --no-html
