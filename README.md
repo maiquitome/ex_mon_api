@@ -47,8 +47,11 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
   $ mix ecto.create
 ```
 ### Creating the trainer migration
-* migrations are files that define how our database is configured and create the tables
+* Migrations — a mechanism to create, modify, and destroy database tables and indexes
+  - https://elixirschool.com/en/lessons/ecto/basics/
+* Migrations are used to modify your database schema over time.
   - https://hexdocs.pm/ecto_sql/Ecto.Migration.html
+* Command to generate our migration
   ```bash
     $ mix ecto.gen.migration create_trainer_table
   ```
