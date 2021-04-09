@@ -345,3 +345,58 @@ iex> ExMon.Trainer.changeset(params)
     ```
       - the password field will not be added to the database because this field is only virtual
       - https://hexdocs.pm/ecto/Ecto.Schema.html
+### Making the trainer's build
+* In the __lib/ex_mon/trainer.ex__
+  - add this code
+    ```elixir
+
+    ```
+  - create the params
+    ```bash
+    iex> params = %{name: "Maiqui", password: "123456"}
+    %{name: "Maiqui", password: "123456"}
+    ```
+  - returns a tuple with _ok_ and a _valid struct_
+    ```bash
+    iex> ExMon.Trainer.build(params)
+    {:ok,
+    %ExMon.Trainer{
+      __meta__: #Ecto.Schema.Metadata<:built, "trainers">,
+      id: nil,
+      inserted_at: nil,
+      name: "Maiqui",
+      password: "123456",
+      password_hash: "$argon2id$v=19$m=131072,t=8,p=4$GhBPky81NBhKhq9X6BDSNw$v5jQumWr1lg8Uc1p2+RUdathZluhH/vFApYWeXdHq/M",
+      updated_at: nil
+    }}
+    ```
+    - if I do a _Pattern Matching_
+    ```bash
+    iex> {:ok, struct} = ExMon.Trainer.build(params)
+    {:ok,
+    %ExMon.Trainer{
+      __meta__: #Ecto.Schema.Metadata<:built, "trainers">,
+      id: nil,
+      inserted_at: nil,
+      name: "Maiqui",
+      password: "123456",
+      password_hash: "$argon2id$v=19$m=131072,t=8,p=4$4q7KAll0E9BV4RLWGX60zw$y2x2Ob0YZjQGjT4SXLmu6w9boptiyLXNKfIGgzDryWM",
+      updated_at: nil
+    }}
+    ```
+    - I will have the _changeset_ inside the _struct_
+    ```bash
+    iex> struct
+    %ExMon.Trainer{
+      __meta__: #Ecto.Schema.Metadata<:built, "trainers">,
+      id: nil,
+      inserted_at: nil,
+      name: "Maiqui",
+      password: "123456",
+      password_hash: "$argon2id$v=19$m=131072,t=8,p=4$4q7KAll0E9BV4RLWGX60zw$y2x2Ob0YZjQGjT4SXLmu6w9boptiyLXNKfIGgzDryWM",
+      updated_at: nil
+    }
+    ```
+
+* learn more about: __apply_action(changeset, action)__
+  - https://hexdocs.pm/ecto/Ecto.Changeset.html#apply_action/2
