@@ -32,6 +32,10 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
 </div>
 
 ### 📚 Recommended study topics for this project
+* Map
+  - https://elixirschool.com/en/lessons/basics/collections/#maps
+* Struct
+  - https://elixirschool.com/en/lessons/basics/modules/#structs
 * Ecto
   1. Basics
       - https://elixirschool.com/en/lessons/ecto/basics/
