@@ -18,6 +18,13 @@ defmodule ExMon.Trainer do
 
   # @required_params [:name, :password_hash]
   @required_params [:name, :password]
+
+  def build(params) do
+    params
+    |> changeset()
+    |> apply_action(:insert) # apply_action(changeset, action)
+  end
+
   def changeset(params) do
     %__MODULE__{}
     |> cast(params, @required_params)
