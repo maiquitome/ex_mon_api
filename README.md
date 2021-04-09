@@ -349,7 +349,11 @@ iex> ExMon.Trainer.changeset(params)
 * In the __lib/ex_mon/trainer.ex__
   - add this code
     ```elixir
-
+    def build(params) do
+      params
+      |> changeset()
+      |> apply_action(:insert) # apply_action(changeset, action)
+    end
     ```
   - create the params
     ```bash
@@ -371,32 +375,32 @@ iex> ExMon.Trainer.changeset(params)
     }}
     ```
     - if I do a _Pattern Matching_
-    ```bash
-    iex> {:ok, struct} = ExMon.Trainer.build(params)
-    {:ok,
-    %ExMon.Trainer{
-      __meta__: #Ecto.Schema.Metadata<:built, "trainers">,
-      id: nil,
-      inserted_at: nil,
-      name: "Maiqui",
-      password: "123456",
-      password_hash: "$argon2id$v=19$m=131072,t=8,p=4$4q7KAll0E9BV4RLWGX60zw$y2x2Ob0YZjQGjT4SXLmu6w9boptiyLXNKfIGgzDryWM",
-      updated_at: nil
-    }}
-    ```
+      ```bash
+      iex> {:ok, struct} = ExMon.Trainer.build(params)
+      {:ok,
+      %ExMon.Trainer{
+        __meta__: #Ecto.Schema.Metadata<:built, "trainers">,
+        id: nil,
+        inserted_at: nil,
+        name: "Maiqui",
+        password: "123456",
+        password_hash: "$argon2id$v=19$m=131072,t=8,p=4$4q7KAll0E9BV4RLWGX60zw$y2x2Ob0YZjQGjT4SXLmu6w9boptiyLXNKfIGgzDryWM",
+        updated_at: nil
+      }}
+      ```
     - I will have the _changeset_ inside the _struct_
-    ```bash
-    iex> struct
-    %ExMon.Trainer{
-      __meta__: #Ecto.Schema.Metadata<:built, "trainers">,
-      id: nil,
-      inserted_at: nil,
-      name: "Maiqui",
-      password: "123456",
-      password_hash: "$argon2id$v=19$m=131072,t=8,p=4$4q7KAll0E9BV4RLWGX60zw$y2x2Ob0YZjQGjT4SXLmu6w9boptiyLXNKfIGgzDryWM",
-      updated_at: nil
-    }
-    ```
+      ```bash
+      iex> struct
+      %ExMon.Trainer{
+        __meta__: #Ecto.Schema.Metadata<:built, "trainers">,
+        id: nil,
+        inserted_at: nil,
+        name: "Maiqui",
+        password: "123456",
+        password_hash: "$argon2id$v=19$m=131072,t=8,p=4$4q7KAll0E9BV4RLWGX60zw$y2x2Ob0YZjQGjT4SXLmu6w9boptiyLXNKfIGgzDryWM",
+        updated_at: nil
+      }
+      ```
 
 * learn more about: __apply_action(changeset, action)__
   - https://hexdocs.pm/ecto/Ecto.Changeset.html#apply_action/2
