@@ -352,7 +352,10 @@ iex> ExMon.Trainer.changeset(params)
     def build(params) do
       params
       |> changeset()
-      |> apply_action(:insert) # apply_action(changeset, action)
+      # Applies the changeset action only if the changes are valid.
+      |> apply_action(:insert)
+      # apply_action(changeset, action)
+      # The action may be any atom.
     end
     ```
   - create the params
@@ -404,3 +407,58 @@ iex> ExMon.Trainer.changeset(params)
 
 * learn more about: __apply_action(changeset, action)__
   - https://hexdocs.pm/ecto/Ecto.Changeset.html#apply_action/2
+
+### The Create Trainer module
+* create __lib/ex_mon/trainer/create.ex__
+  - Add this code
+  ```elixir
+    defmodule ExMon.Trainer.Create do
+      # alias ExMon.{Repo, Trainer}
+
+      def call(params) do
+        params
+        |> ExMon.Trainer.build()
+        |> create_trainer()
+      end
+
+      # inserting into the database
+      defp create_trainer({:ok, struct}), do: ExMon.Repo.insert(struct)
+      defp create_trainer({:error, _changeset} = error), do: error
+    end
+  ```
+* making the interface simpler
+  - in the __lib/ex_mon.ex__ add this code
+  ```elixir
+  defmodule ExMon do
+    # alias ExMon.Trainer
+
+    defdelegate create_trainer(params),
+      to: ExMon.Trainer.Create,
+      as: :call
+  end
+  ```
+  - to learn more about facades
+    - https://dev.to/justgage/saner-apps-with-the-facade-pattern-4e29
+    - http://www.petecorey.com/blog/2018/09/03/using-facades-to-simplify-elixir-modules/
+* testing the code
+  - create the params
+    ```bash
+    iex> params = %{name: "Maiqui", password: "123456"}
+    %{name: "Maiqui", password: "123456"}
+    ```
+  - inserting a trainer in the database
+    ```bash
+    iex> ExMon.create_trainer(params)
+    [debug] QUERY OK db=14.5ms queue=97.8ms idle=719.2ms
+    INSERT INTO "trainers" ("name","password_hash","id","inserted_at","updated_at") VALUES ($1,$2,$3,$4,$5) ["Maiqui", "$argon2id$v=19$m=131072,t=8,p=4$SgXPR4GA6nZkbCseL9NRVA$R4tWwraUkZL4O297MuYs4Du1nBch4t8+DzelAqhCips", <<4, 89, 172, 25, 78, 35, 77, 105, 169, 254, 92, 57, 39, 57, 178, 17>>, ~N[2021-04-10 10:21:54], ~N[2021-04-10 10:21:54]]
+    {:ok,
+    %ExMon.Trainer{
+      __meta__: #Ecto.Schema.Metadata<:loaded, "trainers">,
+      id: "0459ac19-4e23-4d69-a9fe-5c392739b211",
+      inserted_at: ~N[2021-04-10 10:21:54],
+      name: "Maiqui",
+      password: "123456",
+      password_hash: "$argon2id$v=19$m=131072,t=8,p=4$SgXPR4GA6nZkbCseL9NRVA$R4tWwraUkZL4O297MuYs4Du1nBch4t8+DzelAqhCips",
+      updated_at: ~N[2021-04-10 10:21:54]
+    }}
+    ```
