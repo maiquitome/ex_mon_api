@@ -462,3 +462,60 @@ iex> ExMon.Trainer.changeset(params)
       updated_at: ~N[2021-04-10 10:21:54]
     }}
     ```
+### Creating the create trainer route
+* in the __lib/ex_mon_web/router.ex__
+  - in this code
+    ```elixir
+    # http://localhost:4000/api/name_of_the_route
+    scope "/api", ExMonWeb do
+      pipe_through :api
+      # add here
+    end
+    ```
+  - add
+    ```elixir
+    resources "/trainers", TrainersController, only: [:create, :show, :delete, :update]
+    ```
+* create __lib/ex_mon_web/controllers/trainers_controller.ex__
+  - add this code
+    ```elixir
+    defmodule ExMonWeb.TrainersController do
+      use ExMonWeb, :controller
+
+      # create() The first parameter is always conn, a struct which holds information about the request such as the host, path elements, port, query string, and much more.
+      # https://hexdocs.pm/phoenix/controllers.html
+
+      def create(conn, params) do
+        params
+        |> ExMon.create_trainer()
+        # every Phoenix action must return a connection:
+        |> handle_response(conn)
+      end
+
+      defp handle_response({:ok, trainer}, conn) do
+        conn
+        |> put_status(:ok)
+        |> render("create.json", trainer: trainer)
+      end
+    end
+    ```
+* command to see all routes
+  ```bash
+  $ mix phx.routes
+  Compiling 1 file (.ex)
+        trainers_path  GET     /api/trainers/:id       ExMonWeb.TrainersController :show
+        trainers_path  POST    /api/trainers           ExMonWeb.TrainersController :create
+        trainers_path  PATCH   /api/trainers/:id       ExMonWeb.TrainersController :update
+                       PUT     /api/trainers/:id       ExMonWeb.TrainersController :update
+        trainers_path  DELETE  /api/trainers/:id       ExMonWeb.TrainersController :delete
+  live_dashboard_path  GET     /dashboard              Phoenix.LiveView.Plug :home
+  live_dashboard_path  GET     /dashboard/:page        Phoenix.LiveView.Plug :page
+  live_dashboard_path  GET     /dashboard/:node/:page  Phoenix.LiveView.Plug :page
+            websocket  WS      /live/websocket         Phoenix.LiveView.Socket
+            longpoll   GET     /live/longpoll          Phoenix.LiveView.Socket
+            longpoll   POST    /live/longpoll          Phoenix.LiveView.Socket
+            websocket  WS      /socket/websocket       ExMonWeb.UserSocket
+  ```
+* to learn more about
+  - https://hexdocs.pm/phoenix/controllers.html
+  - https://hexdocs.pm/plug/Plug.Conn.Status.html
