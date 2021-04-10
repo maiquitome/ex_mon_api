@@ -494,7 +494,7 @@ iex> ExMon.Trainer.changeset(params)
 
       defp handle_response({:ok, trainer}, conn) do
         conn
-        |> put_status(:ok)
+        |> put_status(:created)
         |> render("create.json", trainer: trainer)
       end
     end
@@ -519,3 +519,103 @@ iex> ExMon.Trainer.changeset(params)
 * to learn more about
   - https://hexdocs.pm/phoenix/controllers.html
   - https://hexdocs.pm/plug/Plug.Conn.Status.html
+### Rendering Trainer (creating the trainer view)
+* create __lib/ex_mon_web/views/trainers_view.ex__
+  - add this code:
+    ```elixir
+    defmodule ExMonWeb.TrainersView do
+      use ExMonWeb, :view
+
+      alias ExMon.Trainer
+
+      def render(
+        "create.json",
+        %{trainer: %Trainer{id: id, name: name, inserted_at: inserted_at}}
+      ) do
+        %{
+          message: "Trainer created!",
+          trainer: %{
+            id: id,
+            name: name,
+            inserted_at: inserted_at
+          }
+        }
+      end
+    end
+    ```
+* creating the trainer...
+  - start the server
+    ```bash
+    $ mix phx.server
+    ```
+  - http post...
+    - to run this command you need to have installed: https://httpie.io/docs#installation
+      ```bash
+      $ http post http://localhost:4000/api/trainers name="Ash Ketchum" password="123456"
+      HTTP/1.1 201 Created
+      cache-control: max-age=0, private, must-revalidate
+      content-length: 143
+      content-type: application/json; charset=utf-8
+      date: Sat, 10 Apr 2021 17:43:52 GMT
+      server: Cowboy
+      x-request-id: FnSQH7JhUqDl1QQAAAJh
+
+      {
+          "message": "Trainer created!",
+          "trainer": {
+              "id": "6fc6c812-7950-4461-8145-8f7259281a71",
+              "inserted_at": "2021-04-10T17:43:52",
+              "name": "Ash Ketchum"
+          }
+      }
+      ```
+  - search all the trainers entered in the database
+  ```bash
+  iex> ExMon.Repo.all(ExMon.Trainer)
+  [debug] QUERY OK source="trainers" db=7.7ms decode=1.3ms queue=0.9ms idle=1179.8ms
+  SELECT t0."id", t0."name", t0."password_hash", t0."inserted_at", t0."updated_at" FROM "trainers" AS t0 []
+  [
+    %ExMon.Trainer{
+      __meta__: #Ecto.Schema.Metadata<:loaded, "trainers">,
+      id: "0459ac19-4e23-4d69-a9fe-5c392739b211",
+      inserted_at: ~N[2021-04-10 10:21:54],
+      name: "Maiqui",
+      password: nil,
+      password_hash: "$argon2id$v=19$m=131072,t=8,p=4$SgXPR4GA6nZkbCseL9NRVA$R4tWwraUkZL4O297MuYs4Du1nBch4t8+DzelAqhCips",
+      updated_at: ~N[2021-04-10 10:21:54]
+    },
+    %ExMon.Trainer{
+      __meta__: #Ecto.Schema.Metadata<:loaded, "trainers">,
+      id: "cee4f5a7-1795-4aca-8382-9a95a1657072",
+      inserted_at: ~N[2021-04-10 17:13:29],
+      name: "Maiqui",
+      password: nil,
+      password_hash: "$argon2id$v=19$m=131072,t=8,p=4$rQ2YWdFrxoaaYFCdlGVQww$R0mGF1zy+2RfsFY61DInqRXmp6m3yX/gIOngPf+uHeA",
+      updated_at: ~N[2021-04-10 17:13:29]
+    },
+    %ExMon.Trainer{
+      __meta__: #Ecto.Schema.Metadata<:loaded, "trainers">,
+      id: "6fc6c812-7950-4461-8145-8f7259281a71",
+      inserted_at: ~N[2021-04-10 17:43:52],
+      name: "Ash Ketchum",
+      password: nil,
+      password_hash: "$argon2id$v=19$m=131072,t=8,p=4$bMZoPwnUMpLOxcXxd49R2A$O0WskxnPMJQmfhvfRFwRVTNwEJk4nNOk6UpbuXyPSLE",
+      updated_at: ~N[2021-04-10 17:43:52]
+    }
+  ]
+  ```
+  - catching only __Ash__ using __id__
+  ```bash
+  iex> ExMon.Repo.get(ExMon.Trainer, "6fc6c812-7950-4461-8145-8f7259281a71")
+  [debug] QUERY OK source="trainers" db=1.9ms queue=3.7ms idle=1872.2ms
+  SELECT t0."id", t0."name", t0."password_hash", t0."inserted_at", t0."updated_at" FROM "trainers" AS t0 WHERE (t0."id" = $1) [<<111, 198, 200, 18, 121, 80, 68, 97, 129, 69, 143, 114, 89, 40, 26, 113>>]
+  %ExMon.Trainer{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "trainers">,
+    id: "6fc6c812-7950-4461-8145-8f7259281a71",
+    inserted_at: ~N[2021-04-10 17:43:52],
+    name: "Ash Ketchum",
+    password: nil,
+    password_hash: "$argon2id$v=19$m=131072,t=8,p=4$bMZoPwnUMpLOxcXxd49R2A$O0WskxnPMJQmfhvfRFwRVTNwEJk4nNOk6UpbuXyPSLE",
+    updated_at: ~N[2021-04-10 17:43:52]
+  }
+  ```
