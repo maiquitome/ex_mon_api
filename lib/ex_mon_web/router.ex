@@ -15,6 +15,7 @@ defmodule ExMonWeb.Router do
   # http://localhost:4000/api/o_nome_da_rota
   scope "/api", ExMonWeb do
     pipe_through :api
+    resources "/trainers", TrainersController, only: [:create, :show, :delete, :update]
   end
 
   # Enables LiveDashboard only for development
@@ -38,8 +39,8 @@ defmodule ExMonWeb.Router do
     # pipe_through: Apenas requisições que aceitem json
     pipe_through :api
 
-    # :index -> action
-    get "/", WelcomeController, :index
+    # :index is an action
+    # get "/", WelcomeController, :index
 
     ### Quando usamos resources, não é preciso informar a action
     ### pois é criado automaticamente:
