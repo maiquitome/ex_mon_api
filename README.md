@@ -352,7 +352,10 @@ iex> ExMon.Trainer.changeset(params)
     def build(params) do
       params
       |> changeset()
-      |> apply_action(:insert) # apply_action(changeset, action)
+      # Applies the changeset action only if the changes are valid.
+      |> apply_action(:insert)
+      # apply_action(changeset, action)
+      # The action may be any atom.
     end
     ```
   - create the params
