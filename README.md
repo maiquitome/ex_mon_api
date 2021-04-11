@@ -619,3 +619,91 @@ iex> ExMon.Trainer.changeset(params)
     updated_at: ~N[2021-04-10 17:43:52]
   }
   ```
+### Handling errors using the Fallback Controller
+* It is a common pattern in Phoenix not to treat the error in the main controller;
+* It is good practice to create a Fallback Controller;
+* Every error that is generated within a controller action is pushed forward and centralises the way we handle errors all in the Fallback Controller;
+* All controllers will use the Fallback Controller to handle errors.
+* In the __lib/ex_mon_web/controllers/trainers_controller.ex__
+  - add the code
+    ```elixir
+    defmodule ExMonWeb.TrainersController do
+      use ExMonWeb, :controller
+
+      # every controller that uses fallback needs to add
+      action_fallback ExMonWeb.FallbackController
+
+      def create(conn, params) do
+        params
+        |> ExMon.create_trainer()
+        |> handle_response(conn)
+      end
+
+      defp handle_response({:ok, trainer}, conn) do
+        conn
+        |> put_status(:created)
+        |> render("create.json", trainer: trainer)
+      end
+
+      # add this code to push the error forward
+      defp handle_response({:error, _changeset} = error, _conn), do: error
+    end
+    ```
+* create __lib/ex_mon_web/controllers/fallback_controller.ex__
+  - add the code
+    ```elixir
+    defmodule ExMonWeb.FallbackController do
+      use ExMonWeb, :controller
+
+      # every controller action receives first the connection
+      # and second the parameters that the action receives
+
+      # every fallback controller defines a call function that will
+      # be responsible for receiving any error that is being pushed forward
+      def call(conn, {:error, result}) do
+        conn
+        # Plug.Conn.put_status(conn, status)
+        |> put_status(:bad_request)
+        # When we want to render a view that
+        # doesn't have the same name as the controller we use put_view
+        # Phoenix.Controller.put_view(conn, module) Stores the view for rendering.
+        |> put_view(ExMonWeb.ErrorView)
+        # Phoenix.Controller.render(conn, template, assigns)
+        |> render("400.json", result: result)
+      end
+    end
+    ```
+* in the __lib/ex_mon_web/views/error_view.ex__
+  - add the code
+    ```elixir
+    defmodule ExMonWeb.ErrorView do
+      use ExMonWeb, :view
+
+      import Ecto.Changeset, only: [traverse_errors: 2]
+
+      # If you want to customize a particular status code
+      # for a certain format, you may uncomment below.
+      # def render("500.json", _assigns) do
+      #   %{errors: %{detail: "Internal Server Error"}}
+      # end
+
+      # By default, Phoenix returns the status message from
+      # the template name. For example, "404.json" becomes
+      # "Not Found".
+      def template_not_found(template, _assigns) do
+        %{errors: %{detail: Phoenix.Controller.status_message_from_template(template)}}
+      end
+
+      def render("400.json", %{result: result}) do
+        %{message: translate_errors(result)}
+      end
+
+      defp translate_errors(changeset) do
+        traverse_errors(changeset, fn {msg, opts} ->
+          Enum.reduce(opts, msg, fn {key, value}, acc ->
+            String.replace(acc, "%{#{key}}", to_string(value))
+          end)
+        end)
+      end
+    end
+    ```

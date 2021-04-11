@@ -1,13 +1,12 @@
 defmodule ExMonWeb.TrainersController do
   use ExMonWeb, :controller
 
-  # create() The first parameter is always conn, a struct which holds information about the request such as the host, path elements, port, query string, and much more.
-  # https://hexdocs.pm/phoenix/controllers.html
+  # every controller that uses fallback needs to add
+  action_fallback ExMonWeb.FallbackController
 
   def create(conn, params) do
     params
     |> ExMon.create_trainer()
-    # every Phoenix action must return a connection:
     |> handle_response(conn)
   end
 
@@ -16,4 +15,7 @@ defmodule ExMonWeb.TrainersController do
     |> put_status(:created)
     |> render("create.json", trainer: trainer)
   end
+
+  # add this code to push the error forward
+  defp handle_response({:error, _changeset} = error, _conn), do: error
 end
