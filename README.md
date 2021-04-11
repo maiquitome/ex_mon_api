@@ -936,3 +936,79 @@ iex> ExMon.Trainer.changeset(params)
       "message": "Trainer not found!"
   }
   ```
+### Creating the GET trainer
+* create __lib/ex_mon/trainer/get.ex__
+  - add this code
+  ```elixir
+    defmodule ExMon.Trainer.Get do
+    alias ExMon.{Trainer, Repo}
+    alias Ecto.UUID
+
+    def call(id) do # id is a string
+      case UUID.cast(id) do
+        :error -> {:error, "Invalid ID format!"}
+        {:ok, uuid} -> get(uuid)
+      end
+    end
+
+    defp get(uuid) do
+      case Repo.get(Trainer, uuid) do
+        nil -> {:error, "Trainer not found!"}
+        trainer -> {:ok, trainer}
+      end
+    end
+  end
+  ```
+* in the __lib/ex_mon.ex__
+  - add this code
+  ```elixir
+  defdelegate fetch_trainer(params),
+    to: ExMon.Trainer.Get,
+    as: :call
+  ```
+* testing in IEX
+  - searching all trainers
+    ```bash
+    iex> ExMon.Repo.all(ExMon.Trainer)
+    [debug] QUERY OK source="trainers" db=12.7ms decode=1.7ms queue=0.8ms idle=1392.8ms
+    SELECT t0."id", t0."name", t0."password_hash", t0."inserted_at", t0."updated_at" FROM "trainers" AS t0 []
+    [
+      %ExMon.Trainer{
+        __meta__: #Ecto.Schema.Metadata<:loaded, "trainers">,
+        id: "6fc6c812-7950-4461-8145-8f7259281a71",
+        inserted_at: ~N[2021-04-10 17:43:52],
+        name: "Ash Ketchum",
+        password: nil,
+        password_hash: "$argon2id$v=19$m=131072,t=8,p=4$bMZoPwnUMpLOxcXxd49R2A$O0WskxnPMJQmfhvfRFwRVTNwEJk4nNOk6UpbuXyPSLE",
+        updated_at: ~N[2021-04-10 17:43:52]
+      }
+    ]
+    ```
+  - searching the trainer by id
+    ```bash
+    iex> ExMon.fetch_trainer("6fc6c812-7950-4461-8145-8f7259281a71")
+    [debug] QUERY OK source="trainers" db=0.9ms queue=1.2ms idle=1069.4ms
+    SELECT t0."id", t0."name", t0."password_hash", t0."inserted_at", t0."updated_at" FROM "trainers" AS t0 WHERE (t0."id" = $1) [<<111, 198, 200, 18, 121, 80, 68, 97, 129, 69, 143, 114, 89, 40, 26, 113>>]
+    {:ok,
+    %ExMon.Trainer{
+      __meta__: #Ecto.Schema.Metadata<:loaded, "trainers">,
+      id: "6fc6c812-7950-4461-8145-8f7259281a71",
+      inserted_at: ~N[2021-04-10 17:43:52],
+      name: "Ash Ketchum",
+      password: nil,
+      password_hash: "$argon2id$v=19$m=131072,t=8,p=4$bMZoPwnUMpLOxcXxd49R2A$O0WskxnPMJQmfhvfRFwRVTNwEJk4nNOk6UpbuXyPSLE",
+      updated_at: ~N[2021-04-10 17:43:52]
+    }}
+    ```
+  - searching for a trainer that doesn't exist
+    ```bash
+    iex> ExMon.fetch_trainer("cee4f5a7-1795-4aca-8382-9a95a1657072")
+    [debug] QUERY OK source="trainers" db=2.4ms queue=0.1ms idle=1448.5ms
+    SELECT t0."id", t0."name", t0."password_hash", t0."inserted_at", t0."updated_at" FROM "trainers" AS t0 WHERE (t0."id" = $1) [<<206, 228, 245, 167, 23, 149, 74, 202, 131, 130, 154, 149, 161, 101, 112, 114>>]
+    {:error, "Trainer not found!"}
+    ```
+  - entering an invalid id
+    ```bash
+    iex> ExMon.fetch_trainer("123456")
+    {:error, "Invalid ID format!"}
+    ```
