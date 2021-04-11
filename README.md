@@ -894,3 +894,45 @@ iex> ExMon.Trainer.changeset(params)
           <meta name="viewport" content="width=device-width">
       ...
       ```
+### Handling errors
+* in the __lib/ex_mon_web/views/error_view.ex__
+  - change the _render_
+  ```elixir
+  def render("400.json", %{result: %Ecto.Changeset{} = result}) do
+    %{message: translate_errors(result)}
+  end
+
+  def render("400.json", %{result: message}) do
+    %{message: message}
+  end
+  ```
+  - now the error message works "Invalid ID format!"
+  ```bash
+  $ http delete http://localhost:4000/api/trainers/123456
+  HTTP/1.1 400 Bad Request
+  cache-control: max-age=0, private, must-revalidate
+  content-length: 32
+  content-type: application/json; charset=utf-8
+  date: Sun, 11 Apr 2021 23:08:40 GMT
+  server: Cowboy
+  x-request-id: FnTi6lcQn_D9eEQAAAEG
+
+  {
+      "message": "Invalid ID format!"
+  }
+  ```
+  - now the error message works "Trainer not_found!"
+  ```bash
+  $ http delete http://localhost:4000/api/trainers/0459ac19-4e23-4d69-a9fe-5c392739b211
+  HTTP/1.1 400 Bad Request
+  cache-control: max-age=0, private, must-revalidate
+  content-length: 32
+  content-type: application/json; charset=utf-8
+  date: Sun, 11 Apr 2021 23:13:50 GMT
+  server: Cowboy
+  x-request-id: FnTjM03m5Qh-fa8AAACB
+
+  {
+      "message": "Trainer not found!"
+  }
+  ```
