@@ -707,3 +707,190 @@ iex> ExMon.Trainer.changeset(params)
       end
     end
     ```
+### Creating the delete route
+* in the __lib/ex_mon.ex__
+  - add the code
+    ```elixir
+    defdelegate delete_trainer(params),
+      to: ExMon.Trainer.Delete,
+      as: :call
+    ```
+* understanding __Ecto.UUID.cast()__
+  ```bash
+  iex> Ecto.UUID.cast("123456")
+  :error
+  ```
+  ```bash
+  iex> Ecto.UUID.generate
+  "365d003d-2874-47ed-a694-9cb9c6a946d8"
+  ```
+  ```bash
+  iex> Ecto.UUID.cast("365d003d-2874-47ed-a694-9cb9c6a946d8")
+  {:ok, "365d003d-2874-47ed-a694-9cb9c6a946d8"}
+  ```
+* create the __lib/ex_mon/trainer/delete.ex__
+  - add the code
+    ```elixir
+    defmodule ExMon.Trainer.Delete do
+      alias ExMon.{Trainer, Repo}
+
+      # id is a string
+      def call(id) do
+        case Ecto.UUID.cast(id) do
+          :error -> {:error, "Invalid ID format!"}
+          {:ok, uuid} -> delete(uuid)
+        end
+      end
+
+      defp delete(uuid) do
+        # return a nil or a trainer:
+        case fetch_trainer(uuid) do
+          nil -> {:error, "Trainer not found!"}
+          trainer -> Repo.delete(trainer)
+        end
+      end
+
+      defp fetch_trainer(uuid), do: Repo.get(Trainer, uuid)
+    end
+    ```
+* deleting the _first trainer_ id: "0459ac19-4e23-4d69-a9fe-5c392739b211"
+  - searching all trainers
+    ```bash
+    iex> ExMon.Repo.all(ExMon.Trainer)
+    [debug] QUERY OK source="trainers" db=15.1ms decode=1.7ms queue=1.1ms idle=693.7ms
+    SELECT t0."id", t0."name", t0."password_hash", t0."inserted_at", t0."updated_at" FROM "trainers" AS t0 []
+    [
+      %ExMon.Trainer{
+        __meta__: #Ecto.Schema.Metadata<:loaded, "trainers">,
+        id: "0459ac19-4e23-4d69-a9fe-5c392739b211",
+        inserted_at: ~N[2021-04-10 10:21:54],
+        name: "Maiqui",
+        password: nil,
+        password_hash: "$argon2id$v=19$m=131072,t=8,p=4$SgXPR4GA6nZkbCseL9NRVA$R4tWwraUkZL4O297MuYs4Du1nBch4t8+DzelAqhCips",
+        updated_at: ~N[2021-04-10 10:21:54]
+      },
+      %ExMon.Trainer{
+        __meta__: #Ecto.Schema.Metadata<:loaded, "trainers">,
+        id: "cee4f5a7-1795-4aca-8382-9a95a1657072",
+        inserted_at: ~N[2021-04-10 17:13:29],
+        name: "Maiqui",
+        password: nil,
+        password_hash: "$argon2id$v=19$m=131072,t=8,p=4$rQ2YWdFrxoaaYFCdlGVQww$R0mGF1zy+2RfsFY61DInqRXmp6m3yX/gIOngPf+uHeA",
+        updated_at: ~N[2021-04-10 17:13:29]
+      },
+      %ExMon.Trainer{
+        __meta__: #Ecto.Schema.Metadata<:loaded, "trainers">,
+        id: "6fc6c812-7950-4461-8145-8f7259281a71",
+        inserted_at: ~N[2021-04-10 17:43:52],
+        name: "Ash Ketchum",
+        password: nil,
+        password_hash: "$argon2id$v=19$m=131072,t=8,p=4$bMZoPwnUMpLOxcXxd49R2A$O0WskxnPMJQmfhvfRFwRVTNwEJk4nNOk6UpbuXyPSLE",
+        updated_at: ~N[2021-04-10 17:43:52]
+      }
+    ]
+    ```
+  - deleting by passing a _valid id_ as argument
+    ```bash
+    iex> ExMon.delete_trainer("0459ac19-4e23-4d69-a9fe-5c392739b211")
+    [debug] QUERY OK source="trainers" db=1.3ms queue=1.4ms idle=1086.9ms
+    SELECT t0."id", t0."name", t0."password_hash", t0."inserted_at", t0."updated_at" FROM "trainers" AS t0 WHERE (t0."id" = $1) [<<4, 89, 172, 25, 78, 35, 77, 105, 169, 254, 92, 57, 39, 57, 178, 17>>]
+    [debug] QUERY OK db=7.5ms queue=2.0ms idle=1108.3ms
+    DELETE FROM "trainers" WHERE "id" = $1 [<<4, 89, 172, 25, 78, 35, 77, 105, 169, 254, 92, 57, 39, 57, 178, 17>>]
+    {:ok,
+    %ExMon.Trainer{
+      __meta__: #Ecto.Schema.Metadata<:deleted, "trainers">,
+      id: "0459ac19-4e23-4d69-a9fe-5c392739b211",
+      inserted_at: ~N[2021-04-10 10:21:54],
+      name: "Maiqui",
+      password: nil,
+      password_hash: "$argon2id$v=19$m=131072,t=8,p=4$SgXPR4GA6nZkbCseL9NRVA$R4tWwraUkZL4O297MuYs4Du1nBch4t8+DzelAqhCips",
+      updated_at: ~N[2021-04-10 10:21:54]
+    }}
+    ```
+  - trying to delete by passing the _same id_ as argument
+    ```bash
+    iex> ExMon.delete_trainer("0459ac19-4e23-4d69-a9fe-5c392739b211")
+    [debug] QUERY OK source="trainers" db=0.9ms queue=0.1ms idle=1864.0ms
+    SELECT t0."id", t0."name", t0."password_hash", t0."inserted_at", t0."updated_at" FROM "trainers" AS t0 WHERE (t0."id" = $1) [<<4, 89, 172, 25, 78, 35, 77, 105, 169, 254, 92, 57, 39, 57, 178, 17>>]
+    {:error, "Trainer not found!"}
+    ```
+  - trying to delete by passing an _invalid id_ as argument
+    ```bash
+    iex> ExMon.delete_trainer("123456")
+    {:error, "Invalid ID format!"}
+    ```
+
+* placing in the controller: __lib/ex_mon_web/controllers/trainers_controller.ex__
+  - add the code
+    ```elixir
+    def delete(conn, %{"id" => id}) do
+      id
+      |> ExMon.delete_trainer()
+      |> handle_delete(conn)
+    end
+
+    defp handle_delete({:ok, _deleted_trainer}, conn) do
+      conn
+      |> put_status(:no_content)
+      |> text("") # returning an empty text
+    end
+
+    # push the error forward
+    defp handle_delete({:error, _reason} = error, _conn), do: error
+    ```
+  - searching all trainers again
+    ```bash
+    iex> ExMon.Repo.all(ExMon.Trainer)
+    [debug] QUERY OK source="trainers" db=2.1ms queue=0.1ms idle=1912.4ms
+    SELECT t0."id", t0."name", t0."password_hash", t0."inserted_at", t0."updated_at" FROM "trainers" AS t0 []
+    [
+      %ExMon.Trainer{
+        __meta__: #Ecto.Schema.Metadata<:loaded, "trainers">,
+        id: "cee4f5a7-1795-4aca-8382-9a95a1657072",
+        inserted_at: ~N[2021-04-10 17:13:29],
+        name: "Maiqui",
+        password: nil,
+        password_hash: "$argon2id$v=19$m=131072,t=8,p=4$rQ2YWdFrxoaaYFCdlGVQww$R0mGF1zy+2RfsFY61DInqRXmp6m3yX/gIOngPf+uHeA",
+        updated_at: ~N[2021-04-10 17:13:29]
+      },
+      %ExMon.Trainer{
+        __meta__: #Ecto.Schema.Metadata<:loaded, "trainers">,
+        id: "6fc6c812-7950-4461-8145-8f7259281a71",
+        inserted_at: ~N[2021-04-10 17:43:52],
+        name: "Ash Ketchum",
+        password: nil,
+        password_hash: "$argon2id$v=19$m=131072,t=8,p=4$bMZoPwnUMpLOxcXxd49R2A$O0WskxnPMJQmfhvfRFwRVTNwEJk4nNOk6UpbuXyPSLE",
+        updated_at: ~N[2021-04-10 17:43:52]
+      }
+    ]
+    ```
+  - deleting the first trainer using http (id: "cee4f5a7-1795-4aca-8382-9a95a1657072")
+    ```bash
+    $ http delete http://localhost:4000/api/trainers/cee4f5a7-1795-4aca-8382-9a95a1657072
+    HTTP/1.1 204 No Content
+    cache-control: max-age=0, private, must-revalidate
+    content-type: text/plain; charset=utf-8
+    date: Sun, 11 Apr 2021 18:07:42 GMT
+    server: Cowboy
+    x-request-id: FnTgAZO6CfBaPqUAAAAh
+    ```
+  - trying to delete using _invalid id_
+    - ❌ here we have a problem ❌
+      ```bash
+      $ http delete http://localhost:4000/api/trainers/123456
+      HTTP/1.1 500 Internal Server Error
+      cache-control: max-age=0, private, must-revalidate
+      content-length: 69118
+      content-type: text/html; charset=utf-8
+      date: Sun, 11 Apr 2021 18:12:05 GMT
+      server: Cowboy
+      x-request-id: FnTgPtQtLjDCpWgAAABh
+
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <meta charset="utf-8">
+          <title>FunctionClauseError at DELETE /api/trainers/123456</title>
+          <meta name="viewport" content="width=device-width">
+      ...
+      ```
