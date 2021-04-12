@@ -1102,3 +1102,28 @@ iex> ExMon.Trainer.changeset(params)
         "message": "Trainer not found!"
     }
     ```
+### Refactoring our changeset for the update
+* in the __lib/ex_mon/trainer.ex__
+  - we need to change this code
+    ```elixir
+    def changeset(params) do
+      %__MODULE__{}
+      |> cast(params, @required_params)
+      |> validate_required(@required_params)
+      |> validate_length(:password, min: 6)
+      |> put_pass_hash()
+    end
+    ```
+  - for this code
+    ```elixir
+    def changeset(params), do: create_changeset(%__MODULE__{}, params)
+    def changeset(trainer, params), do: create_changeset(trainer, params)
+
+    def create_changeset(module_or_trainer, params) do
+      module_or_trainer
+      |> cast(params, @required_params)
+      |> validate_required(@required_params)
+      |> validate_length(:password, min: 6)
+      |> put_pass_hash()
+    end
+    ```
