@@ -1127,3 +1127,121 @@ iex> ExMon.Trainer.changeset(params)
       |> put_pass_hash()
     end
     ```
+### Creating the update logic
+* create __lib/ex_mon/trainer/update.ex__
+  - add the code
+  ```elixir
+  defmodule ExMon.Trainer.Update do
+    alias ExMon.{Trainer, Repo}
+    alias Ecto.UUID
+
+    def call(%{"id" => uuid} = params) do
+      case UUID.cast(uuid) do
+        :error -> {:error, "Invalid ID format!"}
+        {:ok, _uuid} -> update(params)
+      end
+    end
+
+    defp update(%{"id" => uuid} = params) do
+      case fetch_trainer(uuid) do
+        nil -> {:error, "Trainer not found!"}
+        trainer -> update_trainer(trainer, params)
+      end
+    end
+
+    defp fetch_trainer(uuid), do: Repo.get(Trainer, uuid)
+
+    defp update_trainer(trainer, params) do
+      trainer
+      |> Trainer.changeset(params)
+      |> Repo.update()
+    end
+  end
+  ```
+* testing
+  - searching for a trainer
+    ```bash
+    iex> ExMon.fetch_trainer("6fc6c812-7950-4461-8145-8f7259281a71")
+    [debug] QUERY OK source="trainers" db=0.9ms queue=1.2ms idle=1069.4ms
+    SELECT t0."id", t0."name", t0."password_hash", t0."inserted_at", t0."updated_at" FROM "trainers" AS t0 WHERE (t0."id" = $1) [<<111, 198, 200, 18, 121, 80, 68, 97, 129, 69, 143, 114, 89, 40, 26, 113>>]
+    {:ok,
+    %ExMon.Trainer{
+      __meta__: #Ecto.Schema.Metadata<:loaded, "trainers">,
+      id: "6fc6c812-7950-4461-8145-8f7259281a71",
+      inserted_at: ~N[2021-04-10 17:43:52],
+      name: "Ash Ketchum",
+      password: nil,
+      password_hash: "$argon2id$v=19$m=131072,t=8,p=4$bMZoPwnUMpLOxcXxd49R2A$O0WskxnPMJQmfhvfRFwRVTNwEJk4nNOk6UpbuXyPSLE",
+      updated_at: ~N[2021-04-10 17:43:52]
+    }}
+    ```
+  - create the params
+    ```bash
+    iex> params = %{"id" => "6fc6c812-7950-4461-8145-8f7259281a71", "name" => "Maiqui Tomé", "password" => "12345678"}
+    %{
+      "id" => "6fc6c812-7950-4461-8145-8f7259281a71",
+      "name" => "Maiqui Tomé",
+      "password" => "12345678"
+    }
+    ```
+  - updating...
+    ```bash
+    iex(3)> ExMon.Trainer.Update.call(params)
+    [debug] QUERY OK source="trainers" db=2.3ms queue=0.1ms idle=1099.2ms
+    SELECT t0."id", t0."name", t0."password_hash", t0."inserted_at", t0."updated_at" FROM "trainers" AS t0 WHERE (t0."id" = $1) [<<111, 198, 200, 18, 121, 80, 68, 97, 129, 69, 143, 114, 89, 40, 26, 113>>]
+    [debug] QUERY OK db=2.9ms queue=0.6ms idle=1439.1ms
+    UPDATE "trainers" SET "name" = $1, "password_hash" = $2, "updated_at" = $3 WHERE "id" = $4 ["Maiqui Tomé", "$argon2id$v=19$m=131072,t=8,p=4$HtKN4TNv8AIO5DIMz4Ch9g$Cd7FaCIoS2rmmo3u7lzeZWmd4fKvi3SwUX9XOkGWZAU", ~N[2021-04-12 15:40:59], <<111, 198, 200, 18, 121, 80, 68, 97, 129, 69, 143, 114, 89, 40, 26, 113>>]
+    {:ok,
+    %ExMon.Trainer{
+      __meta__: #Ecto.Schema.Metadata<:loaded, "trainers">,
+      id: "6fc6c812-7950-4461-8145-8f7259281a71",
+      inserted_at: ~N[2021-04-10 17:43:52],
+      name: "Maiqui Tomé",
+      password: "12345678",
+      password_hash: "$argon2id$v=19$m=131072,t=8,p=4$HtKN4TNv8AIO5DIMz4Ch9g$Cd7FaCIoS2rmmo3u7lzeZWmd4fKvi3SwUX9XOkGWZAU",
+      updated_at: ~N[2021-04-12 15:40:59]
+    }}
+    ```
+  - checking if it has changed at all
+    ```bash
+    iex(4)> ExMon.fetch_trainer("6fc6c812-7950-4461-8145-8f7259281a71")
+    [debug] QUERY OK source="trainers" db=1.2ms idle=1622.6ms
+    SELECT t0."id", t0."name", t0."password_hash", t0."inserted_at", t0."updated_at" FROM "trainers" AS t0 WHERE (t0."id" = $1) [<<111, 198, 200, 18, 121, 80, 68, 97, 129, 69, 143, 114, 89, 40, 26, 113>>]
+    {:ok,
+    %ExMon.Trainer{
+      __meta__: #Ecto.Schema.Metadata<:loaded, "trainers">,
+      id: "6fc6c812-7950-4461-8145-8f7259281a71",
+      inserted_at: ~N[2021-04-10 17:43:52],
+      name: "Maiqui Tomé",
+      password: nil,
+      password_hash: "$argon2id$v=19$m=131072,t=8,p=4$HtKN4TNv8AIO5DIMz4Ch9g$Cd7FaCIoS2rmmo3u7lzeZWmd4fKvi3SwUX9XOkGWZAU",
+      updated_at: ~N[2021-04-12 15:40:59]
+    }}
+    ```
+  - trying to update with blank password
+    - params without password
+      ```bash
+      iex> params = %{"id" => "6fc6c812-7950-4461-8145-8f7259281a71", "name" => "Maiqui Tomé"}
+      %{"id" => "6fc6c812-7950-4461-8145-8f7259281a71", "name" => "Maiqui Tomé"}
+      ```
+    - error when trying to update
+      ```bash
+      iex> ExMon.Trainer.Update.call(params)
+      [debug] QUERY OK source="trainers" db=2.3ms queue=0.1ms idle=1269.8ms
+      SELECT t0."id", t0."name", t0."password_hash", t0."inserted_at", t0."updated_at" FROM "trainers" AS t0 WHERE (t0."id" = $1) [<<111, 198, 200, 18, 121, 80, 68, 97, 129, 69, 143, 114, 89, 40, 26, 113>>]
+      {:error,
+      #Ecto.Changeset<
+        action: :update,
+        changes: %{},
+        errors: [password: {"can't be blank", [validation: :required]}],
+        data: #ExMon.Trainer<>,
+        valid?: false
+      >}
+      ```
+* in the __lib/ex_mon.ex__
+  - add the code
+    ```elixir
+    defdelegate update_trainer(params),
+      to: ExMon.Trainer.Update,
+      as: :call
+    ```

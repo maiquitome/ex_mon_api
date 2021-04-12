@@ -12,4 +12,8 @@ defmodule ExMon do
   defdelegate fetch_trainer(params),
     to: ExMon.Trainer.Get,
     as: :call
+
+  defdelegate update_trainer(params),
+    to: ExMon.Trainer.Update,
+    as: :call
 end
