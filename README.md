@@ -1012,3 +1012,93 @@ iex> ExMon.Trainer.changeset(params)
     iex> ExMon.fetch_trainer("123456")
     {:error, "Invalid ID format!"}
     ```
+### Refactoring our Trainer Controller
+* in the __lib/ex_mon_web/controllers/trainers_controller.ex__
+  - creating the _show action_
+    ```elixir
+    def show(conn, %{"id" => id}) do
+      id
+      |> ExMon.fetch_trainer()
+      |> handle_response(conn)
+    end
+    ```
+  - refactoring the *handle_response* to be used by _show_ and _create_
+    - add _view_ and _status_
+      ```elixir
+      defp handle_response({:ok, trainer}, conn, view, status) do
+        conn
+        |> put_status(status)
+        |> render(view, trainer: trainer)
+      end
+
+      defp handle_response({:error, _changeset} = error, _conn, _view, _status), do: error
+      ```
+    - change the __def create()__
+      ```elixir
+      |> handle_response(conn, "create.json", :created)
+      ```
+    - change the __def show()__
+      ```elixir
+      |> handle_response(conn, "show.json", :ok)
+      ```
+* in the __lib/ex_mon_web/views/trainers_view.ex__
+  - create the _show.json_
+    ```elixir
+    def render(
+      "show.json",
+      %{trainer: %Trainer{id: id, name: name, inserted_at: inserted_at}}
+    ) do
+      %{
+        id: id,
+        name: name,
+        inserted_at: inserted_at
+      }
+    end
+    ```
+  - searching for a trainer in bash
+    ```bash
+    $ http get http://localhost:4000/api/trainers/6fc6c812-7950-4461-8145-8f7259281a71
+    HTTP/1.1 200 OK
+    cache-control: max-age=0, private, must-revalidate
+    content-length: 102
+    content-type: application/json; charset=utf-8
+    date: Mon, 12 Apr 2021 01:33:09 GMT
+    server: Cowboy
+    x-request-id: FnTpmbfX3zxyocYAAAPE
+
+    {
+        "id": "6fc6c812-7950-4461-8145-8f7259281a71",
+        "inserted_at": "2021-04-10T17:43:52",
+        "name": "Ash Ketchum"
+    }
+    ```
+  - passing an invalid id
+    ```bash
+    $ http get http://localhost:4000/api/trainers/123456
+    HTTP/1.1 400 Bad Request
+    cache-control: max-age=0, private, must-revalidate
+    content-length: 32
+    content-type: application/json; charset=utf-8
+    date: Mon, 12 Apr 2021 01:35:01 GMT
+    server: Cowboy
+    x-request-id: FnTps-fsimRxu0AAAAAH
+
+    {
+        "message": "Invalid ID format!"
+    }
+    ```
+  - passing an id that does not exist in the database
+    ```bash
+    $ http get http://localhost:4000/api/trainers/cee4f5a7-1795-4aca-8382-9a95a1657072
+    HTTP/1.1 400 Bad Request
+    cache-control: max-age=0, private, must-revalidate
+    content-length: 32
+    content-type: application/json; charset=utf-8
+    date: Mon, 12 Apr 2021 01:37:22 GMT
+    server: Cowboy
+    x-request-id: FnTp1TTBq4wYsOEAAAPk
+
+    {
+        "message": "Trainer not found!"
+    }
+    ```
