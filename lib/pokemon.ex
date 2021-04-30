@@ -7,6 +7,7 @@ defmodule ExMon.Pokemon do
 
   @enforce_keys @keys
 
+  @derive Jason.Encoder
   defstruct @keys
 
   @spec build(map) :: %ExMon.Pokemon{id: number(), name: String, types: list, weight: number()}
