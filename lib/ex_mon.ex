@@ -18,7 +18,7 @@ defmodule ExMon do
     as: :call
 
   @spec fetch_pokemon(String) ::
-          {:error, any}
+          {:error, %{message: String, status: number}}
           | {:ok, %ExMon.Pokemon{id: number, name: String, types: list, weight: number}}
   @doc """
   Fetch the pokemon data.
@@ -33,7 +33,7 @@ defmodule ExMon do
       {:ok, %ExMon.Pokemon{id: 25, name: "pikachu", types: ["electric"], weight: 60}}
 
       iex> ExMon.fetch_pokemon("banana")
-      {:error, "pokemon not found"}
+      {:error, %{message: "pokemon not found", status: 404}}
 
   """
   defdelegate fetch_pokemon(pokemon_name),
