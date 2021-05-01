@@ -11,8 +11,11 @@ defmodule ExMon.Trainer do
     field :name, :string
     field :password_hash, :string
     # Using virtual: true
-      # This field doesn't exist in the database
+    # This field doesn't exist in the database
     field :password, :string, virtual: true
+
+    has_many :pokemons, ExMon.Trainer.Pokemon
+
     timestamps()
   end
 
@@ -22,7 +25,8 @@ defmodule ExMon.Trainer do
   def build(params) do
     params
     |> changeset()
-    |> apply_action(:insert) # apply_action(changeset, action)
+    # apply_action(changeset, action)
+    |> apply_action(:insert)
   end
 
   def changeset(params), do: create_changeset(%__MODULE__{}, params)
@@ -36,9 +40,7 @@ defmodule ExMon.Trainer do
     |> put_pass_hash()
   end
 
-  defp put_pass_hash(
-    %Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset
-  ) do
+  defp put_pass_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
     # change(data, changes \\ %{})
     change(changeset, Argon2.add_hash(password))
   end
