@@ -13,6 +13,9 @@ defmodule ExMon.Trainer do
     # Using virtual: true
       # This field doesn't exist in the database
     field :password, :string, virtual: true
+
+    has_many :pokemons, ExMon.Trainer.Pokemon
+
     timestamps()
   end
 
